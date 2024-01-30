@@ -198,3 +198,27 @@ provides access to most of pkgconf's functionality, to allow other tooling
 such as compilers and IDEs to discover and use libraries configured by
 pkgconf.")
     (license isc)))
+
+(define-public pkgconf-as-pkg-config
+  (package
+    (inherit pkgconf)
+    (name "pkgconf-as-pkg-config")
+    (build-system trivial-build-system)
+    (arguments
+     (list
+      #:builder
+      (with-imported-modules '((guix build utils))
+        #~(begin
+            (use-modules (guix build utils))
+
+            (mkdir-p (string-append #$output "/bin"))
+            (symlink (string-append #$pkgconf "/bin/pkgconf")
+                     (string-append #$output "/bin/pkg-config"))
+
+            ;; Also make 'pkg.m4' available, some packages might expect it.
+            (mkdir-p (string-append #$output "/share"))
+            (symlink (string-append #$pkgconf "/share/aclocal")
+                     (string-append #$output "/share/aclocal"))))))
+    (native-inputs '())
+    (inputs '())
+    (propagated-inputs '())))
